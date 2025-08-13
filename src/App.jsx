@@ -87,13 +87,13 @@ const PRESENTERS = [
   {
     name: "Patrick Naufel (Flashão)",
     bio: "Professor, pesquisador e especialista em transformação digital e inovação.",
-    photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop",
-    linkedin: "https://www.linkedin.com/in/patricknaufel/",
+    photo: "/1731084367538.jpeg",
+    linkedin: "https://www.linkedin.com/in/naufelpatrick/",
   },
   {
     name: "Giovani Letti",
-    bio: "Estrategista de mercado e tecnologia — coapresentador do InPodcast.",
-    photo: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?q=80&w=1200&auto=format&fit=crop",
+    bio: "Professor universitário, empreendedor e palestrante. Comunicação, criatividade e inovação.",
+    photo: "/1752886107474.jpeg",
     linkedin: "https://www.linkedin.com/in/giovani-letti-1332a1/",
   },
 ];
@@ -307,7 +307,7 @@ function HeaderHero() {
           transition={{ duration: 0.6 }}
           className="text-balance bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl"
         >
-          Ideias que movem mercado.
+          IN pode ser o que você quiser.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
