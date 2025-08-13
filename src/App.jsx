@@ -87,13 +87,13 @@ const PRESENTERS = [
   {
     name: "Patrick Naufel (Flashão)",
     bio: "Professor, pesquisador e especialista em transformação digital e inovação.",
-    photo: "/1731084367538.jpeg",
-    linkedin: "https://www.linkedin.com/in/naufelpatrick/",
+    photo: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1200&auto=format&fit=crop",
+    linkedin: "https://www.linkedin.com/in/patricknaufel/",
   },
   {
     name: "Giovani Letti",
     bio: "Estrategista de mercado e tecnologia — coapresentador do InPodcast.",
-    photo: "/1752886107474.jpeg",
+    photo: "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?q=80&w=1200&auto=format&fit=crop",
     linkedin: "https://www.linkedin.com/in/giovani-letti-1332a1/",
   },
 ];
@@ -316,7 +316,7 @@ function HeaderHero() {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="mt-3 max-w-2xl text-lg text-neutral-300"
         >
-          Um podcast sobre inteligência de mercado, inventividade e inovação. Conceitos, ferramentas, estudos de caso e algum humor ☺️ . Apresentado por Giovanni Letti e Patrick Naufel..
+           Um podcast sobre inteligência de mercado, inventividade e inovação. Conceitos, ferramentas, estudos de caso e algum humor ☺️ . Apresentado por Giovanni Letti e Patrick Naufel.
         </motion.p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="#ultimo-episodio" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-neutral-900 hover:bg-neutral-200">
@@ -327,7 +327,7 @@ function HeaderHero() {
           </a>
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 bg-[radial-gradient(1200px_1200px_at_50%_-20%,rgba(88,101,242,0.35),transparent_00%)]"/>
+      <div className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 bg-[radial-gradient(1200px_1200px_at_50%_-20%,rgba(88,101,242,0.35),transparent_60%)]"/>
     </header>
   );
 }
@@ -385,14 +385,14 @@ function EpisodesCarousel({ videos }) {
     el.scrollBy({ left: delta, behavior: "smooth" });
   }
   return (
-    <div className="relative">
-      <div className="absolute -left-3 top-1/2 hidden -translate-y-1/2 md:block">
-        <button onClick={() => scrollBy(-480)} className="rounded-full border border-neutral-800 bg-neutral-900/70 p-2 hover:bg-neutral-800" aria-label="Anterior">
+    <div className="relative isolate">
+      <div className="absolute left-2 top-1/2 hidden -translate-y-1/2 md:block z-30 pointer-events-none">
+        <button onClick={() => scrollBy(-480)} className="pointer-events-auto rounded-full border border-neutral-800 bg-neutral-900/70 p-2 shadow-lg hover:bg-neutral-800" aria-label="Anterior">
           <ChevronLeft className="h-5 w-5" />
         </button>
       </div>
-      <div className="absolute -right-3 top-1/2 hidden -translate-y-1/2 md:block">
-        <button onClick={() => scrollBy(480)} className="rounded-full border border-neutral-800 bg-neutral-900/70 p-2 hover:bg-neutral-800" aria-label="Próximo">
+      <div className="absolute right-2 top-1/2 hidden -translate-y-1/2 md:block z-30 pointer-events-none">
+        <button onClick={() => scrollBy(480)} className="pointer-events-auto rounded-full border border-neutral-800 bg-neutral-900/70 p-2 shadow-lg hover:bg-neutral-800" aria-label="Próximo">
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
