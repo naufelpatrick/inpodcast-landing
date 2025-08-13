@@ -107,18 +107,26 @@ function extractFirstImgSrc(html) {
   try {
     const doc = new DOMParser().parseFromString(html, "text/html");
     const img = doc.querySelector("img");
-    return img?.getAttribute("src") || "";
+    let src = img?.getAttribute("src") ?? "";
+    if (src && src.startsWith("//")) src = "https:" + src;
+    return src;
   } catch {
     const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-    return m ? m[1] : "";
+    let src = m?.[1] ?? "";
+    if (src && src.startsWith("//")) src = "https:" + src;
+    return src;
   }
 }
+
+
 
 async function fetchSubstackArticles(rssUrl, max = 12) {
   const res = await fetch(rssUrl);
   if (!res.ok) throw new Error("Falha ao carregar RSS do Substack");
   const xmlText = await res.text();
   const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+
+  const norm = (u) => (u && u.startsWith("//") ? "https:" + u : u || "");
 
   const items = Array.from(xml.querySelectorAll("item"));
   let list = items.map((item) => {
@@ -127,7 +135,7 @@ async function fetchSubstackArticles(rssUrl, max = 12) {
     const enclosure = item.querySelector("enclosure")?.getAttribute("url") || "";
     const media = item.querySelector("media\:content")?.getAttribute("url") || item.querySelector("media\:thumbnail")?.getAttribute("url") || "";
     const contentEncoded = item.querySelector("content\:encoded")?.textContent || item.querySelector("description")?.textContent || "";
-    const thumb = enclosure || media || extractFirstImgSrc(contentEncoded);
+    const thumb = norm(enclosure || media || extractFirstImgSrc(contentEncoded));
     return { title, link, thumbnail: thumb };
   });
 
@@ -137,7 +145,7 @@ async function fetchSubstackArticles(rssUrl, max = 12) {
       const title = entry.querySelector("title")?.textContent?.trim() || "";
       const link = entry.querySelector("link")?.getAttribute("href") || "#";
       const content = entry.querySelector("content")?.textContent || entry.querySelector("summary")?.textContent || "";
-      const thumb = extractFirstImgSrc(content);
+      const thumb = norm(extractFirstImgSrc(content));
       return { title, link, thumbnail: thumb };
     });
   }
@@ -256,14 +264,18 @@ export default function App() {
         <section id="artigos" className="relative scroll-mt-24">
           <SectionHeader title="Últimos Artigos" subtitle="Direto do nosso Substack" />
           <div className="mx-auto max-w-6xl px-4">
-            {articles.length > 0 ? (
+            {articlesLoading ? (
+              <ArticlesPlaceholder />
+            ) : articles.length > 0 ? (
               <ArticlesCarousel articles={articles} />
             ) : articlesError ? (
               <div className="rounded-xl border border-red-900 bg-red-950/50 p-4 text-center text-red-300">
                 Não foi possível carregar o feed do Substack. Verifique a URL ou habilite o proxy <code>/api/substack</code> na Vercel.
               </div>
             ) : (
-              <ArticlesPlaceholder />
+              <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-center text-neutral-300">
+                Nenhum artigo encontrado no feed.
+              </div>
             )}
           </div>
         </section>
@@ -578,9 +590,18 @@ function ArticlesCarousel({ articles }) {
 }
 
 function ArticlesPlaceholder() {
+  const items = new Array(6).fill(0);
   return (
-    <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-neutral-300 text-center">
-      <p>Para exibir os artigos, defina o feed RSS do Substack em <code>SUBSTACK_RSS_URL</code> (ex.: <span className="whitespace-nowrap">https://seu.substack.com/feed</span>). Se o seu feed bloquear CORS, podemos ativar um proxy simples com uma Serverless Function na Vercel.</p>
+    <div className="mt-1 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {items.map((_, i) => (
+        <div key={i} className="w-72 shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-neutral-900">
+          <div className="aspect-[16/10] w-full animate-pulse bg-neutral-200" />
+          <div className="space-y-2 p-4">
+            <div className="h-4 w-5/6 animate-pulse rounded bg-neutral-200" />
+            <div className="h-3 w-2/4 animate-pulse rounded bg-neutral-200" />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
