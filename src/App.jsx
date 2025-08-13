@@ -118,8 +118,6 @@ function extractFirstImgSrc(html) {
   }
 }
 
-
-
 async function fetchSubstackArticles(rssUrl, max = 12) {
   const res = await fetch(rssUrl);
   if (!res.ok) throw new Error("Falha ao carregar RSS do Substack");
@@ -159,6 +157,7 @@ export default function App() {
   const [error, setError] = useState(null);
   const [articles, setArticles] = useState([]);
   const [articlesError, setArticlesError] = useState(null);
+  const [articlesLoading, setArticlesLoading] = useState(true);
 
   // Carrega vídeos do YouTube
   useEffect(() => {
@@ -181,8 +180,12 @@ export default function App() {
   // Carrega artigos do Substack
   useEffect(() => {
     let mounted = true;
-    if (!SUBSTACK_RSS_URL) return () => { mounted = false; };
+    if (!SUBSTACK_RSS_URL) {
+      setArticlesLoading(false);
+      return () => { mounted = false; };
+    }
     (async () => {
+      setArticlesLoading(true);
       try {
         const endpoint = `/api/substack?url=${encodeURIComponent(SUBSTACK_RSS_URL)}`;
         const items = await fetchSubstackArticles(endpoint, 12);
@@ -191,6 +194,8 @@ export default function App() {
       } catch (e) {
         if (!mounted) return;
         setArticlesError(e?.message || "Erro ao carregar artigos do Substack");
+      } finally {
+        if (mounted) setArticlesLoading(false);
       }
     })();
     return () => { mounted = false; };
