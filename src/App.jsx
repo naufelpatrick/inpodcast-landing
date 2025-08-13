@@ -327,7 +327,7 @@ function HeaderHero() {
           </a>
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 bg-[radial-gradient(1200px_1200px_at_50%_-20%,rgba(88,101,242,0.35),transparent_60%)]"/>
+      <div className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 bg-[radial-gradient(1200px_1200px_at_50%_-20%,rgba(88,101,242,0.35),transparent_00%)]"/>
     </header>
   );
 }
