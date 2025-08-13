@@ -78,7 +78,7 @@ function formatDate(d) {
 const SOCIALS = [
   { name: "LinkedIn", href: "https://www.linkedin.com/company/intelimerk/", icon: Linkedin },
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
-  { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
+  { name: "Spotify", href: "https://open.spotify.com/show/3RbSarPxUhlBXUKSnFpYrc?si=42QqicJmSNae5sOKgX2KPg/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
   { name: "Substack", href: "https://substack.com/", icon: FileText },
 ];
@@ -316,7 +316,7 @@ function HeaderHero() {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="mt-3 max-w-2xl text-lg text-neutral-300"
         >
-          InPodcast é o seu podcast sobre inteligência de mercado, inovação e estratégia — com conversas francas e aplicáveis.
+          Um podcast sobre inteligência de mercado, inventividade e inovação. Conceitos, ferramentas, estudos de caso e algum humor ☺️ . Apresentado por Giovanni Letti e Patrick Naufel..
         </motion.p>
         <div className="mt-6 flex flex-wrap gap-3">
           <a href="#ultimo-episodio" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-neutral-900 hover:bg-neutral-200">
