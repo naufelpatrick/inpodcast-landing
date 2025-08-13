@@ -307,7 +307,7 @@ function HeaderHero() {
           transition={{ duration: 0.6 }}
           className="text-balance bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl"
         >
-          IN pode ser o que você quiser.
+          IN pode ser o que você quiser!
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
