@@ -130,7 +130,7 @@ export default function App() {
         <HeaderHero />
 
         {/* Último Episódio */}
-        <section id="ultimo-episodio" className="relative scroll-mt-24">
+        <section id="ultimo-episodio" className="relative scroll-mt-24 text-center" >
           <SectionHeader title="Último Episódio" subtitle="Assista agora o vídeo mais recente do nosso canal" />
           {error && <FallbackLatest />}
           {!error && latestId && (
@@ -141,7 +141,7 @@ export default function App() {
         </section>
 
         {/* Episódios */}
-        <section id="episodios" className="relative scroll-mt-24">
+        <section id="episodios" className="relative scroll-mt-24 text-center">
           <SectionHeader title="Episódios" subtitle="Navegue pelos episódios em vídeo" />
           {videos.length > 0 ? (
             <div className="mx-auto max-w-6xl px-4">
@@ -155,7 +155,7 @@ export default function App() {
         </section>
 
         {/* Apresentadores */}
-        <section id="apresentadores" className="relative scroll-mt-24">
+        <section id="apresentadores" className="relative scroll-mt-24 text-center">
           <SectionHeader title="Apresentadores" subtitle="Quem comanda o InPodcast" />
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-2">
             {PRESENTERS.map((p, i) => (
@@ -188,12 +188,12 @@ export default function App() {
         </section>
 
         {/* Contato */}
-        <section id="contato" className="relative scroll-mt-24">
+        <section id="contato" className="relative scroll-mt-24 text-center">
           <SectionHeader title="Contato" subtitle="Fale com a equipe do InPodcast" />
           <div className="mx-auto max-w-3xl px-4">
             <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 text-center">
               <Mail className="mx-auto h-8 w-8" />
-              <p className="mt-3 text-sm text-neutral-300">Nosso e‑mail</p>
+              {/* <p className="mt-3 text-sm text-neutral-300">Nosso e‑mail</p> */}
               <a href="mailto:info@intelimerk.com" className="mt-1 inline-block text-lg font-medium text-white underline-offset-4 hover:underline">
                 info@intelimerk.com
               </a>
@@ -299,7 +299,7 @@ function Navbar() {
 function HeaderHero() {
   return (
     <header id="top" className="relative isolate overflow-hidden">
-      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-6xl px-4 py-16 sm:py-20 text-center">
         <motion.h1
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -307,30 +307,40 @@ function HeaderHero() {
           transition={{ duration: 0.6 }}
           className="text-balance bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl"
         >
-          IN pode ser o que você quiser!
+          IN pode ser o que você quiser.
         </motion.h1>
+
         <motion.p
           initial={{ opacity: 0, y: 10 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mt-3 max-w-2xl text-lg text-neutral-300"
+          className="mt-3 max-w-2xl mx-auto text-lg text-neutral-300"
         >
            Um podcast sobre inteligência de mercado, inventividade e inovação. Conceitos, ferramentas, estudos de caso e algum humor ☺️ . Apresentado por Giovanni Letti e Patrick Naufel.
         </motion.p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <a href="#ultimo-episodio" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-neutral-900 hover:bg-neutral-200">
+
+        <div className="mt-6 flex flex-wrap justify-center gap-3">
+          <a
+            href="#ultimo-episodio"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-neutral-900 hover:bg-neutral-200"
+          >
             <Play className="h-4 w-4" /> Assistir o último episódio
           </a>
-          <a href="#episodios" className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-neutral-100 hover:bg-neutral-800">
+          <a
+            href="#episodios"
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-neutral-100 hover:bg-neutral-800"
+          >
             Ver todos os episódios
           </a>
         </div>
       </div>
-      <div className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 bg-[radial-gradient(1200px_1200px_at_50%_-20%,rgba(88,101,242,0.35),transparent_00%)]"/>
+
+      <div className="pointer-events-none absolute inset-x-0 -top-24 -z-10 h-72 bg-[radial-gradient(1200px_1200px_at_50%_-20%,rgba(88,101,242,0.35),transparent_00%)]" />
     </header>
   );
 }
+
 
 function SectionHeader({ title, subtitle }) {
   return (
