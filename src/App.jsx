@@ -23,7 +23,7 @@ import {
 // Caminho do logo (coloque o arquivo em `public/`)
 const LOGO_SRC = "/in-logo-horizontal-branco.png";
 
-// Substack RSS (defina seu feed depois, ex.: "https://inpodcast.substack.com/feed")
+// Substack RSS (defina seu feed depois, ex.: "https://SEU.substack.com/feed")
 const SUBSTACK_RSS_URL = "https://inpodcast.substack.com/feed";
 
 // YouTube config (a chave foi solicitada pelo usuário para ficar inline)
@@ -176,7 +176,8 @@ export default function App() {
     if (!SUBSTACK_RSS_URL) return () => { mounted = false; };
     (async () => {
       try {
-        const items = await fetchSubstackArticles(SUBSTACK_RSS_URL, 12);
+        const endpoint = `/api/substack?url=${encodeURIComponent(SUBSTACK_RSS_URL)}`;
+        const items = await fetchSubstackArticles(endpoint, 12);
         if (!mounted) return;
         setArticles(items);
       } catch (e) {
@@ -257,6 +258,10 @@ export default function App() {
           <div className="mx-auto max-w-6xl px-4">
             {articles.length > 0 ? (
               <ArticlesCarousel articles={articles} />
+            ) : articlesError ? (
+              <div className="rounded-xl border border-red-900 bg-red-950/50 p-4 text-center text-red-300">
+                Não foi possível carregar o feed do Substack. Verifique a URL ou habilite o proxy <code>/api/substack</code> na Vercel.
+              </div>
             ) : (
               <ArticlesPlaceholder />
             )}
