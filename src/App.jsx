@@ -83,23 +83,23 @@ const SOCIALS = [
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
   { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
-  { name: "Substack", href: "https://substack.com/@inpodcast", icon: FileText },
+  { name: "Substack", href: "https://substack.com/", icon: FileText },
 ];
 
 const PRESENTERS = [
   {
-    name: "Giovanni Letti",
-    bio: "Professor universitário, empreendedor e palestrante. Comunicação, criatividade e inovação.",
-    photo: "/1752886107474.jpeg",
-    linkedin: "https://www.linkedin.com/in/giovani-letti-1332a1/",
-  },
-  {
     name: "Patrick Naufel (Flashão)",
-    bio: "Professor, pesquisador em transformação digital e inovação e especialista em UX.",
+    bio: "Professor, pesquisador e especialista em transformação digital e inovação.",
     photo: "/1731084367538.jpeg",
     linkedin: "https://www.linkedin.com/in/naufelpatrick/",
   },
-  ];
+  {
+    name: "Giovanni Letti",
+    bio: "Estrategista de mercado e tecnologia — coapresentador do InPodcast.",
+    photo: "/1752886107474.jpeg",
+    linkedin: "https://www.linkedin.com/in/giovani-letti-1332a1/",
+  },
+];
 
 // === Substack RSS helpers ===
 function extractFirstImgSrc(html) {
@@ -120,12 +120,22 @@ function extractFirstImgSrc(html) {
 
 async function fetchSubstackArticles(rssUrl, max = 12) {
   const res = await fetch(rssUrl);
-  if (!res.ok) throw new Error("Falha ao carregar RSS do Substack");
+  if (!res.ok) throw new Error(`RSS HTTP ${res.status}`);
   const xmlText = await res.text();
-  const xml = new DOMParser().parseFromString(xmlText, "text/xml");
+
+  // Tenta parsear como XML; se falhar, detecta parsererror e tenta novamente
+  let xml = new DOMParser().parseFromString(xmlText, "application/xml");
+  if (xml.querySelector("parsererror")) {
+    console.warn("Substack RSS: parsererror em application/xml, tentando text/xml");
+    xml = new DOMParser().parseFromString(xmlText, "text/xml");
+  }
+  if (xml.querySelector("parsererror")) {
+    throw new Error("XML inválido do Substack");
+  }
 
   const norm = (u) => (u && u.startsWith("//") ? "https:" + u : u || "");
 
+  // RSS 2.0
   const items = Array.from(xml.querySelectorAll("item"));
   let list = items.map((item) => {
     const title = item.querySelector("title")?.textContent?.trim() || "";
@@ -137,6 +147,7 @@ async function fetchSubstackArticles(rssUrl, max = 12) {
     return { title, link, thumbnail: thumb };
   });
 
+  // Atom fallback
   if (list.length === 0) {
     const entries = Array.from(xml.querySelectorAll("entry"));
     list = entries.map((entry) => {
@@ -148,6 +159,7 @@ async function fetchSubstackArticles(rssUrl, max = 12) {
     });
   }
 
+  console.log("Substack RSS items:", list.length);
   return list.slice(0, max);
 }
 
@@ -187,12 +199,15 @@ export default function App() {
     (async () => {
       setArticlesLoading(true);
       try {
-        const endpoint = `/api/substack?url=${encodeURIComponent(SUBSTACK_RSS_URL)}`;
+        const endpoint = `/api/substack?url=${encodeURIComponent(SUBSTACK_RSS_URL)}&t=${Date.now()}`; // evita cache
+        console.log("Buscando RSS:", endpoint);
         const items = await fetchSubstackArticles(endpoint, 12);
         if (!mounted) return;
         setArticles(items);
+        setArticlesError(null);
       } catch (e) {
         if (!mounted) return;
+        console.error("Erro RSS:", e);
         setArticlesError(e?.message || "Erro ao carregar artigos do Substack");
       } finally {
         if (mounted) setArticlesLoading(false);
