@@ -79,27 +79,27 @@ function formatDate(d) {
 }
 
 const SOCIALS = [
-  { name: "LinkedIn", href: "https://www.linkedin.com/company/intelimerk/", icon: Linkedin },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/inpodcastoficial/", icon: Linkedin },
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
   { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
-  { name: "Substack", href: "https://substack.com/", icon: FileText },
+  { name: "Substack", href: "https://substack.com/@inpodcast", icon: FileText },
 ];
 
 const PRESENTERS = [
   {
-    name: "Patrick Naufel (Flashão)",
-    bio: "Professor, pesquisador e especialista em transformação digital e inovação.",
-    photo: "/1731084367538.jpeg",
-    linkedin: "https://www.linkedin.com/in/naufelpatrick/",
-  },
-  {
     name: "Giovanni Letti",
-    bio: "Estrategista de mercado e tecnologia — coapresentador do InPodcast.",
+    bio: "Professor universitário, empreendedor e palestrante. Comunicação, criatividade e inovação.",
     photo: "/1752886107474.jpeg",
     linkedin: "https://www.linkedin.com/in/giovani-letti-1332a1/",
   },
-];
+  {
+    name: "Patrick Naufel (Flashão)",
+    bio: "Professor, pesquisador em transformação digital e inovação e especialista em UX.",
+    photo: "/1731084367538.jpeg",
+    linkedin: "https://www.linkedin.com/in/naufelpatrick/",
+  },
+  ];
 
 // === Substack RSS helpers ===
 function extractFirstImgSrc(html) {
