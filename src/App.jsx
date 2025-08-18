@@ -79,7 +79,7 @@ function formatDate(d) {
 }
 
 const SOCIALS = [
-  { name: "LinkedIn", href: "https://www.linkedin.com/company/indpocastoficial/", icon: Linkedin },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/inpodcastoficial/", icon: Linkedin },
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
   { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
@@ -101,67 +101,123 @@ const PRESENTERS = [
   },
 ];
 
-// === Substack RSS helpers ===
-function extractFirstImgSrc(html) {
-  if (!html) return "";
-  try {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const img = doc.querySelector("img");
-    let src = img?.getAttribute("src") ?? "";
-    if (src && src.startsWith("//")) src = "https:" + src;
-    return src;
-  } catch {
-    const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-    let src = m?.[1] ?? "";
-    if (src && src.startsWith("//")) src = "https:" + src;
-    return src;
-  }
-}
-
+// === Substack RSS helpers (robusto, sem throw em parse) ===
 async function fetchSubstackArticles(rssUrl, max = 12) {
   const res = await fetch(rssUrl);
-  if (!res.ok) throw new Error(`RSS HTTP ${res.status}`);
+  if (!res.ok) throw new Error(`RSS HTTP ${res.status}`); // só erra em HTTP != 200
   const xmlText = await res.text();
 
-  // Tenta parsear como XML; se falhar, detecta parsererror e tenta novamente
-  let xml = new DOMParser().parseFromString(xmlText, "application/xml");
-  if (xml.querySelector("parsererror")) {
-    console.warn("Substack RSS: parsererror em application/xml, tentando text/xml");
-    xml = new DOMParser().parseFromString(xmlText, "text/xml");
-  }
-  if (xml.querySelector("parsererror")) {
-    throw new Error("XML inválido do Substack");
-  }
-
   const norm = (u) => (u && u.startsWith("//") ? "https:" + u : u || "");
+  const stripCdata = (s = "") => s.replace(/<!\[CDATA\[/g, "").replace(/\]\]>/g, "");
 
-  // RSS 2.0
-  const items = Array.from(xml.querySelectorAll("item"));
-  let list = items.map((item) => {
-    const title = item.querySelector("title")?.textContent?.trim() || "";
-    const link = item.querySelector("link")?.textContent?.trim() || "#";
-    const enclosure = item.querySelector("enclosure")?.getAttribute("url") || "";
-    const media = item.querySelector("media\:content")?.getAttribute("url") || item.querySelector("media\:thumbnail")?.getAttribute("url") || "";
-    const contentEncoded = item.querySelector("content\:encoded")?.textContent || item.querySelector("description")?.textContent || "";
-    const thumb = norm(enclosure || media || extractFirstImgSrc(contentEncoded));
-    return { title, link, thumbnail: thumb };
-  });
+  // 1) Tenta DOMParser (RSS 2.0 / Atom)
+  try {
+    let xml = new DOMParser().parseFromString(xmlText, "application/xml");
+    if (xml.querySelector("parsererror")) {
+      xml = new DOMParser().parseFromString(xmlText, "text/xml");
+    }
+    if (!xml.querySelector("parsererror")) {
+      // RSS 2.0
+      let list = Array.from(xml.querySelectorAll("item")).map((item) => {
+        const title = stripCdata(item.querySelector("title")?.textContent?.trim() || "");
+        const link =
+          (item.querySelector("link")?.textContent || "").trim() ||
+          item.querySelector("guid")?.textContent?.trim() ||
+          "#";
+        const enclosure = item.querySelector("enclosure")?.getAttribute("url") || "";
+        const media =
+          item.querySelector("media\\:content")?.getAttribute("url") ||
+          item.querySelector("media\\:thumbnail")?.getAttribute("url") ||
+          "";
+        const contentEncoded =
+          item.querySelector("content\\:encoded")?.textContent ||
+          item.querySelector("description")?.textContent ||
+          "";
+        const thumb = norm(enclosure || media || extractFirstImgSrc(contentEncoded));
+        return { title, link, thumbnail: thumb };
+      });
 
-  // Atom fallback
-  if (list.length === 0) {
-    const entries = Array.from(xml.querySelectorAll("entry"));
-    list = entries.map((entry) => {
-      const title = entry.querySelector("title")?.textContent?.trim() || "";
-      const link = entry.querySelector("link")?.getAttribute("href") || "#";
-      const content = entry.querySelector("content")?.textContent || entry.querySelector("summary")?.textContent || "";
-      const thumb = norm(extractFirstImgSrc(content));
-      return { title, link, thumbnail: thumb };
-    });
+      // Atom fallback
+      if (list.length === 0) {
+        list = Array.from(xml.querySelectorAll("entry")).map((entry) => {
+          const title = stripCdata(entry.querySelector("title")?.textContent?.trim() || "");
+          const link = entry.querySelector("link")?.getAttribute("href") || "#";
+          const content = entry.querySelector("content")?.textContent || entry.querySelector("summary")?.textContent || "";
+          const thumb = norm(extractFirstImgSrc(content));
+          return { title, link, thumbnail: thumb };
+        });
+      }
+
+      console.log("Substack RSS items:", list.length);
+      return list.slice(0, max); // pode ser [], e tudo bem
+    }
+  } catch {
+    console.warn("DOMParser falhou, ativando fallback por regex.");
   }
 
-  console.log("Substack RSS items:", list.length);
-  return list.slice(0, max);
+  // 2) Fallback por regex (lê mesmo com XML “estranho”)
+  const items = [];
+
+  // RSS <item>...</item>
+  const itemBlocks = xmlText.match(/<item[\s\S]*?<\/item>/gi) || [];
+  for (const block of itemBlocks.slice(0, max)) {
+    const title = stripCdata(block.match(/<title>([\s\S]*?)<\/title>/i)?.[1] || "").trim();
+    const link =
+      (block.match(/<link>([\s\S]*?)<\/link>/i)?.[1] || "").trim() ||
+      (block.match(/<guid>([\s\S]*?)<\/guid>/i)?.[1] || "").trim() ||
+      "#";
+    const content =
+      block.match(/<content:encoded>([\s\S]*?)<\/content:encoded>/i)?.[1] ||
+      block.match(/<description>([\s\S]*?)<\/description>/i)?.[1] ||
+      "";
+    const thumb = norm(extractFirstImgSrc(content));
+    if (title) items.push({ title, link, thumbnail: thumb });
+  }
+
+  // Atom <entry>...</entry>
+  if (items.length === 0) {
+    const entryBlocks = xmlText.match(/<entry[\s\S]*?<\/entry>/gi) || [];
+    for (const block of entryBlocks.slice(0, max)) {
+      const title = stripCdata(block.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || "").trim();
+      const link = (block.match(/<link[^>]+href=["']([^"']+)["']/i)?.[1] || "").trim() || "#";
+      const content =
+        block.match(/<content[^>]*>([\s\S]*?)<\/content>/i)?.[1] ||
+        block.match(/<summary[^>]*>([\s\S]*?)<\/summary>/i)?.[1] ||
+        "";
+      const thumb = norm(extractFirstImgSrc(content));
+      if (title) items.push({ title, link, thumbnail: thumb });
+    }
+  }
+
+  console.log("Substack RSS (regex) items:", items.length);
+  return items.slice(0, max); // pode ser [], e tudo bem
 }
+// Carrega artigos do Substack
+useEffect(() => {
+  let mounted = true;
+  if (!SUBSTACK_RSS_URL) {
+    setArticlesLoading(false);
+    return () => { mounted = false; };
+  }
+  (async () => {
+    setArticlesLoading(true);
+    try {
+      const endpoint = `/api/substack?url=${encodeURIComponent(SUBSTACK_RSS_URL)}&t=${Date.now()}`;
+      console.log("Buscando RSS:", endpoint);
+      const items = await fetchSubstackArticles(endpoint, 12);
+      if (!mounted) return;
+      setArticles(items);           // [] é válido
+      setArticlesError(null);       // não mostra erro vermelho
+    } catch (e) {
+      if (!mounted) return;
+      console.error("Erro RSS:", e);
+      setArticlesError(e?.message || "Erro ao carregar artigos do Substack");
+    } finally {
+      if (mounted) setArticlesLoading(false);
+    }
+  })();
+  return () => { mounted = false; };
+}, []);
 
 export default function App() {
   const [videos, setVideos] = useState([]);
