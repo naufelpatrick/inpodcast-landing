@@ -98,7 +98,7 @@ const PRESENTERS = [
   },
   {
     name: "Patrick Naufel (Flashão)",
-    bio: "Professor universitário, especialista em Product Design e UX e pesquisador na área de Transformação Digital.",
+    bio: "Professor universitário, especialista em Product Design e UX e pesquisador na área de Transformação Digital",
     photo: "/1731084367538.jpeg",
     linkedin: "https://www.linkedin.com/in/naufelpatrick/",
   },
