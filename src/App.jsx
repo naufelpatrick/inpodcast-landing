@@ -82,7 +82,7 @@ function formatDate(d) {
 
 // ========= Dados fixos =========
 const SOCIALS = [
-  { name: "LinkedIn", href: "https://www.linkedin.com/company/inpodcastoficial/", icon: Linkedin },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/intelimerk/", icon: Linkedin },
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
   { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
