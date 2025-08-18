@@ -79,7 +79,7 @@ function formatDate(d) {
 }
 
 const SOCIALS = [
-  { name: "LinkedIn", href: "https://www.linkedin.com/company/inpodcastoficial/", icon: Linkedin },
+  { name: "LinkedIn", href: "https://www.linkedin.com/company/indpocastoficial/", icon: Linkedin },
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
   { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
@@ -306,7 +306,7 @@ export default function App() {
           <div className="mx-auto max-w-3xl px-4">
             <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 text-center">
               <Mail className="mx-auto h-8 w-8" />
-              <p className="mt-3 text-sm text-neutral-300">Nosso e‑mail</p>
+              <p className="mt-3 text-sm text-neutral-300">Nosso e-mail</p>
               <a href="mailto:info@intelimerk.com" className="mt-1 inline-block text-lg font-medium text-white underline-offset-4 hover:underline">
                 info@intelimerk.com
               </a>
