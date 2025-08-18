@@ -13,20 +13,21 @@ import {
 } from "lucide-react";
 
 // =====================
-// App.jsx – InPodcast LP (JavaScript)
+// App.jsx – InPodcast LP
 // =====================
-// ✔ Seções: Último Episódio, Episódios, Apresentadores, Contato
+// ✔ Seções: Último Episódio, Episódios, Apresentadores, Artigos, Contato
 // ✔ Menu fixo, rodapé com redes
 // ✔ Responsivo (Tailwind) + animações (framer-motion)
-// ✔ Integração YouTube: usa API KEY embutida abaixo
+// ✔ YouTube funcionando (API KEY + CHANNEL_ID)
+// ✔ Substack via /api/substack (server gera JSON; client só consome)
 
 // Caminho do logo (coloque o arquivo em `public/`)
 const LOGO_SRC = "/in-logo-horizontal-branco.png";
 
-// Substack RSS (defina seu feed depois, ex.: "https://SEU.substack.com/feed")
+// Substack RSS (seu feed)
 const SUBSTACK_RSS_URL = "https://inpodcast.substack.com/feed";
 
-// YouTube config (a chave foi solicitada pelo usuário para ficar inline)
+// YouTube config
 const YOUTUBE_CONFIG = {
   API_KEY: "AIzaSyAPSTgz0entjo65ZGJbc7MzYijZaJ5f57Q",
   CHANNEL_HANDLE: "@inpodcastoficial",
@@ -34,6 +35,7 @@ const YOUTUBE_CONFIG = {
   MAX_RESULTS: 24,
 };
 
+// ========= YouTube helpers =========
 async function resolveChannelIdByHandle(apiKey, handle) {
   const url = new URL("https://www.googleapis.com/youtube/v3/channels");
   url.searchParams.set("part", "id");
@@ -78,97 +80,43 @@ function formatDate(d) {
   }
 }
 
+// ========= Dados fixos =========
 const SOCIALS = [
   { name: "LinkedIn", href: "https://www.linkedin.com/company/inpodcastoficial/", icon: Linkedin },
   { name: "Instagram", href: "https://www.instagram.com/inpodcast.oficial/", icon: Instagram },
   { name: "Spotify", href: "https://open.spotify.com/show/", icon: Headphones },
   { name: "YouTube", href: "https://www.youtube.com/@inpodcastoficial", icon: Youtube },
-  { name: "Substack", href: "https://substack.com/", icon: FileText },
+  { name: "Substack", href: "https://inpodcast.substack.com/", icon: FileText },
 ];
 
 const PRESENTERS = [
-  {
-    name: "Patrick Naufel (Flashão)",
-    bio: "Professor, pesquisador e especialista em transformação digital e inovação.",
-    photo: "/1731084367538.jpeg",
-    linkedin: "https://www.linkedin.com/in/naufelpatrick/",
-  },
-  {
+    {
     name: "Giovanni Letti",
-    bio: "Estrategista de mercado e tecnologia — coapresentador do InPodcast.",
+    bio: "Professor universitário, empreendedor e palestrante. Comunicação, criatividade e inovação.",
     photo: "/1752886107474.jpeg",
     linkedin: "https://www.linkedin.com/in/giovani-letti-1332a1/",
   },
+  {
+    name: "Patrick Naufel (Flashão)",
+    bio: "Professor universitário, especialista em Product Design e UX e pesquisador na área de Transformação Digital.",
+    photo: "/1731084367538.jpeg",
+    linkedin: "https://www.linkedin.com/in/naufelpatrick/",
+  },
 ];
 
-// === Substack RSS helpers ===
-function extractFirstImgSrc(html) {
-  if (!html) return "";
-  try {
-    const doc = new DOMParser().parseFromString(html, "text/html");
-    const img = doc.querySelector("img");
-    let src = img?.getAttribute("src") ?? "";
-    if (src && src.startsWith("//")) src = "https:" + src;
-    return src;
-  } catch {
-    const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-    let src = m?.[1] ?? "";
-    if (src && src.startsWith("//")) src = "https:" + src;
-    return src;
-  }
-}
-
-// === Substack RSS helpers (robusto, sem throw em parse) ===
-async function fetchSubstackArticles(rssUrl, max = 12) {
-  const res = await fetch(rssUrl);
-  if (!res.ok) throw new Error(`RSS HTTP ${res.status}`); // só erra em HTTP != 200
-  const xmlText = await res.text();
-  
-
-  // Tenta parsear como XML; se falhar, detecta parsererror e tenta novamente
-  let xml = new DOMParser().parseFromString(xmlText, "application/xml");
-  if (xml.querySelector("parsererror")) {
-    console.warn("Substack RSS: parsererror em application/xml, tentando text/xml");
-    xml = new DOMParser().parseFromString(xmlText, "text/xml");
-  }
-  if (xml.querySelector("parsererror")) {
-    throw new Error("XML inválido do Substack");
-  }
-
-  const norm = (u) => (u && u.startsWith("//") ? "https:" + u : u || "");
-
-  // RSS 2.0
-  const items = Array.from(xml.querySelectorAll("item"));
-  let list = items.map((item) => {
-    const title = item.querySelector("title")?.textContent?.trim() || "";
-    const link = item.querySelector("link")?.textContent?.trim() || "#";
-    const enclosure = item.querySelector("enclosure")?.getAttribute("url") || "";
-    const media = item.querySelector("media\:content")?.getAttribute("url") || item.querySelector("media\:thumbnail")?.getAttribute("url") || "";
-    const contentEncoded = item.querySelector("content\:encoded")?.textContent || item.querySelector("description")?.textContent || "";
-    const thumb = norm(enclosure || media || extractFirstImgSrc(contentEncoded));
-    return { title, link, thumbnail: thumb };
-  });
-
-  // Atom fallback
-  if (list.length === 0) {
-    const entries = Array.from(xml.querySelectorAll("entry"));
-    list = entries.map((entry) => {
-      const title = entry.querySelector("title")?.textContent?.trim() || "";
-      const link = entry.querySelector("link")?.getAttribute("href") || "#";
-      const content = entry.querySelector("content")?.textContent || entry.querySelector("summary")?.textContent || "";
-      const thumb = norm(extractFirstImgSrc(content));
-      return { title, link, thumbnail: thumb };
-    });
-  }
-
-  console.log("Substack RSS items:", list.length);
-  return list.slice(0, max);
+// ========= Substack: agora consumindo JSON do endpoint /api/substack =========
+async function fetchSubstackArticlesJSON(endpoint) {
+  const res = await fetch(endpoint, { cache: "no-store" });
+  if (!res.ok) throw new Error(`RSS HTTP ${res.status}`);
+  const data = await res.json();
+  return data.items ?? [];
 }
 
 export default function App() {
   const [videos, setVideos] = useState([]);
   const [latestId, setLatestId] = useState(null);
   const [error, setError] = useState(null);
+
   const [articles, setArticles] = useState([]);
   const [articlesError, setArticlesError] = useState(null);
   const [articlesLoading, setArticlesLoading] = useState(true);
@@ -178,8 +126,14 @@ export default function App() {
     let mounted = true;
     (async () => {
       try {
-        const channelId = YOUTUBE_CONFIG.CHANNEL_ID || (await resolveChannelIdByHandle(YOUTUBE_CONFIG.API_KEY, YOUTUBE_CONFIG.CHANNEL_HANDLE));
-        const vids = await fetchChannelVideos(YOUTUBE_CONFIG.API_KEY, channelId, YOUTUBE_CONFIG.MAX_RESULTS);
+        const channelId =
+          YOUTUBE_CONFIG.CHANNEL_ID ||
+          (await resolveChannelIdByHandle(YOUTUBE_CONFIG.API_KEY, YOUTUBE_CONFIG.CHANNEL_HANDLE));
+        const vids = await fetchChannelVideos(
+          YOUTUBE_CONFIG.API_KEY,
+          channelId,
+          YOUTUBE_CONFIG.MAX_RESULTS
+        );
         if (!mounted) return;
         setVideos(vids);
         setLatestId(vids[0]?.id || null);
@@ -188,24 +142,23 @@ export default function App() {
         setError(e?.message || "Erro ao carregar vídeos do YouTube");
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  // Carrega artigos do Substack
+  // Carrega artigos do Substack (via função serverless JSON)
   useEffect(() => {
     let mounted = true;
-    if (!SUBSTACK_RSS_URL) {
-      setArticlesLoading(false);
-      return () => { mounted = false; };
-    }
     (async () => {
       setArticlesLoading(true);
       try {
-        const endpoint = `/api/substack?url=${encodeURIComponent(SUBSTACK_RSS_URL)}&t=${Date.now()}`; // evita cache
-        console.log("Buscando RSS:", endpoint);
-        const items = await fetchSubstackArticles(endpoint, 12);
+        const endpoint = `/api/substack?url=${encodeURIComponent(
+          SUBSTACK_RSS_URL
+        )}&max=12&t=${Date.now()}`;
+        const items = await fetchSubstackArticlesJSON(endpoint);
         if (!mounted) return;
-        setArticles(items);
+        setArticles(items); // [] é válido
         setArticlesError(null);
       } catch (e) {
         if (!mounted) return;
@@ -215,7 +168,9 @@ export default function App() {
         if (mounted) setArticlesLoading(false);
       }
     })();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (
@@ -226,7 +181,10 @@ export default function App() {
 
         {/* Último Episódio */}
         <section id="ultimo-episodio" className="relative scroll-mt-24">
-          <SectionHeader title="Último Episódio" subtitle="Assista agora o vídeo mais recente do nosso canal" />
+          <SectionHeader
+            title="Último Episódio"
+            subtitle="Assista agora o vídeo mais recente do nosso canal"
+          />
           {error && <FallbackLatest />}
           {!error && latestId && (
             <div className="mx-auto max-w-5xl px-4">
@@ -237,7 +195,10 @@ export default function App() {
 
         {/* Episódios */}
         <section id="episodios" className="relative scroll-mt-24">
-          <SectionHeader title="Episódios" subtitle="Navegue pelos episódios em vídeo" />
+          <SectionHeader
+            title="Episódios"
+            subtitle="Navegue pelos episódios em vídeo"
+          />
           {videos.length > 0 ? (
             <div className="mx-auto max-w-6xl px-4">
               <EpisodesCarousel videos={videos} />
@@ -251,7 +212,10 @@ export default function App() {
 
         {/* Apresentadores */}
         <section id="apresentadores" className="relative scroll-mt-24">
-          <SectionHeader title="Apresentadores" subtitle="Quem comanda o InPodcast" />
+          <SectionHeader
+            title="Apresentadores"
+            subtitle="Quem comanda o InPodcast"
+          />
           <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 px-4 md:grid-cols-2">
             {PRESENTERS.map((p, i) => (
               <motion.article
@@ -263,7 +227,11 @@ export default function App() {
                 className="overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/40 shadow-xl"
               >
                 <div className="aspect-[16/10] w-full overflow-hidden bg-neutral-800">
-                  <img src={p.photo} alt={p.name} className="h-full w-full object-cover" />
+                  <img
+                    src={p.photo}
+                    alt={p.name}
+                    className="h-full w-full object-cover"
+                  />
                 </div>
                 <div className="space-y-2 p-6 text-center">
                   <h3 className="text-xl font-semibold">{p.name}</h3>
@@ -292,7 +260,8 @@ export default function App() {
               <ArticlesCarousel articles={articles} />
             ) : articlesError ? (
               <div className="rounded-xl border border-red-900 bg-red-950/50 p-4 text-center text-red-300">
-                Não foi possível carregar o feed do Substack. Verifique a URL ou habilite o proxy <code>/api/substack</code> na Vercel.
+                Não foi possível carregar o feed do Substack. Verifique a URL ou
+                habilite o proxy <code>/api/substack</code> na Vercel.
               </div>
             ) : (
               <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-center text-neutral-300">
@@ -309,7 +278,10 @@ export default function App() {
             <div className="rounded-2xl border border-neutral-800 bg-neutral-900/50 p-6 text-center">
               <Mail className="mx-auto h-8 w-8" />
               <p className="mt-3 text-sm text-neutral-300">Nosso e-mail</p>
-              <a href="mailto:info@intelimerk.com" className="mt-1 inline-block text-lg font-medium text-white underline-offset-4 hover:underline">
+              <a
+                href="mailto:info@intelimerk.com"
+                className="mt-1 inline-block text-lg font-medium text-white underline-offset-4 hover:underline"
+              >
                 info@intelimerk.com
               </a>
             </div>
@@ -319,7 +291,9 @@ export default function App() {
 
       <footer className="mt-16 border-t border-neutral-800/80">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-8 md:flex-row md:justify-between">
-          <div className="text-sm text-neutral-400">© {new Date().getFullYear()} InPodcast • Todos os direitos reservados</div>
+          <div className="text-sm text-neutral-400">
+            © {new Date().getFullYear()} InPodcast • Todos os direitos reservados
+          </div>
           <div className="flex flex-wrap items-center justify-center gap-4">
             {SOCIALS.map((s) => (
               <a
@@ -342,6 +316,7 @@ export default function App() {
   );
 }
 
+// ========= UI components =========
 function Navbar() {
   const [open, setOpen] = useState(false);
   const links = [
@@ -355,7 +330,11 @@ function Navbar() {
     <div className="fixed inset-x-0 top-0 z-[100] bg-neutral-900 text-white shadow-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <a href="#top" className="flex items-center gap-3">
-          <img src={LOGO_SRC} alt="InPodcast" className="h-7 w-auto sm:h-8 md:h-9 lg:h-10 shrink-0" />
+          <img
+            src={LOGO_SRC}
+            alt="InPodcast"
+            className="h-7 w-auto sm:h-8 md:h-9 lg:h-10 shrink-0"
+          />
         </a>
 
         {/* Desktop nav */}
@@ -382,19 +361,30 @@ function Navbar() {
           {open ? (
             // Ícone X
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-              <path fillRule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z"
+                clipRule="evenodd"
+              />
             </svg>
           ) : (
             // Ícone hambúrguer
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-              <path fillRule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm.75 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z" clipRule="evenodd" />
+              <path
+                fillRule="evenodd"
+                d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm.75 4.5a.75.75 0 0 0 0 1.5h16.5a.75.75 0 0 0 0-1.5H3.75Z"
+                clipRule="evenodd"
+              />
             </svg>
           )}
         </button>
       </div>
 
       {/* Mobile dropdown */}
-      <div id="mobile-menu" className={`md:hidden ${open ? "block" : "hidden"} border-t border-neutral-800/80 bg-neutral-900`}>
+      <div
+        id="mobile-menu"
+        className={`md:hidden ${open ? "block" : "hidden"} border-t border-neutral-800/80 bg-neutral-900`}
+      >
         <nav className="mx-auto flex max-w-6xl flex-col px-4 py-2">
           {links.map((l) => (
             <a
@@ -430,20 +420,25 @@ function HeaderHero() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.7, delay: 0.1 }}
-          className="mt-3 max-w-2xl mx-auto text-lg text-neutral-300"
+          className="mt-3 mx-auto max-w-2xl text-lg text-neutral-300"
         >
           Um podcast sobre inteligência de mercado, inventividade e inovação. Conceitos, ferramentas, estudos de caso e algum humor ☺️ . Apresentado por Giovanni Letti e Patrick Naufel.
         </motion.p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
-          <a href="#ultimo-episodio" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-neutral-900 hover:bg-neutral-200">
+          <a
+            href="#ultimo-episodio"
+            className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-neutral-900 hover:bg-neutral-200"
+          >
             <Play className="h-4 w-4" /> Assistir o último episódio
           </a>
-          <a href="#episodios" className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-neutral-100 hover:bg-neutral-800">
+          <a
+            href="#episodios"
+            className="inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-neutral-100 hover:bg-neutral-800"
+          >
             Ver todos os episódios
           </a>
         </div>
       </div>
-      
     </header>
   );
 }
@@ -484,8 +479,15 @@ function FallbackLatest() {
   return (
     <div className="mx-auto max-w-5xl px-4">
       <div className="mt-4 rounded-2xl border border-neutral-800 bg-neutral-900/40 p-6 text-center">
-        <p className="text-neutral-300">Não foi possível carregar automaticamente o último episódio.</p>
-        <a className="mt-4 inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800" href="https://www.youtube.com/@inpodcastoficial/videos" target="_blank" rel="noreferrer">
+        <p className="text-neutral-300">
+          Não foi possível carregar automaticamente o último episódio.
+        </p>
+        <a
+          className="mt-4 inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800"
+          href="https://www.youtube.com/@inpodcastoficial/videos"
+          target="_blank"
+          rel="noreferrer"
+        >
           <Youtube className="h-4 w-4" /> Ver vídeos no YouTube
         </a>
       </div>
@@ -502,18 +504,29 @@ function EpisodesCarousel({ videos }) {
   }
   return (
     <div className="relative isolate">
-      <div className="absolute left-2 top-1/2 hidden -translate-y-1/2 md:block z-30 pointer-events-none">
-        <button onClick={() => scrollBy(-480)} className="pointer-events-auto rounded-full border border-neutral-800 bg-neutral-900/70 p-2 shadow-lg hover:bg-neutral-800" aria-label="Anterior">
+      <div className="pointer-events-none absolute left-2 top-1/2 hidden -translate-y-1/2 md:block z-30">
+        <button
+          onClick={() => scrollBy(-480)}
+          className="pointer-events-auto rounded-full border border-neutral-800 bg-neutral-900/70 p-2 shadow-lg hover:bg-neutral-800"
+          aria-label="Anterior"
+        >
           <ChevronLeft className="h-5 w-5" />
         </button>
       </div>
-      <div className="absolute right-2 top-1/2 hidden -translate-y-1/2 md:block z-30 pointer-events-none">
-        <button onClick={() => scrollBy(480)} className="pointer-events-auto rounded-full border border-neutral-800 bg-neutral-900/70 p-2 shadow-lg hover:bg-neutral-800" aria-label="Próximo">
+      <div className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 md:block z-30">
+        <button
+          onClick={() => scrollBy(480)}
+          className="pointer-events-auto rounded-full border border-neutral-800 bg-neutral-900/70 p-2 shadow-lg hover:bg-neutral-800"
+          aria-label="Próximo"
+        >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
 
-      <div ref={trackRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={trackRef}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {videos.map((v) => (
           <a
             key={v.id}
@@ -524,13 +537,21 @@ function EpisodesCarousel({ videos }) {
           >
             <div className="relative aspect-video w-full bg-neutral-800">
               {v.thumbnail ? (
-                <img src={v.thumbnail} alt={v.title} className="h-full w-full object-cover" />
+                <img
+                  src={v.thumbnail}
+                  alt={v.title}
+                  className="h-full w-full object-cover"
+                />
               ) : (
-                <div className="grid h-full place-items-center text-neutral-400"><Play className="h-7 w-7" /></div>
+                <div className="grid h-full place-items-center text-neutral-400">
+                  <Play className="h-7 w-7" />
+                </div>
               )}
             </div>
             <div className="space-y-1 p-4 text-center">
-              <h4 className="line-clamp-2 text-sm font-medium text-white group-hover:underline">{v.title}</h4>
+              <h4 className="line-clamp-2 text-sm font-medium text-white group-hover:underline">
+                {v.title}
+              </h4>
               <p className="text-xs text-neutral-400">{formatDate(v.publishedAt)}</p>
             </div>
           </a>
@@ -545,14 +566,24 @@ function EpisodesPlaceholder() {
   return (
     <div>
       <div className="rounded-xl border border-neutral-800 bg-neutral-900/50 p-4 text-center">
-        <p className="text-sm text-neutral-300">Conecte sua API do YouTube para exibir automaticamente o carrossel de episódios. Enquanto isso, você pode direcionar os visitantes ao canal:</p>
-        <a href="https://www.youtube.com/@inpodcastoficial/videos" target="_blank" rel="noreferrer" className="mt-3 inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800">
+        <p className="text-sm text-neutral-300">
+          Conecte sua API do YouTube para exibir automaticamente o carrossel de episódios. Enquanto isso, você pode direcionar os visitantes ao canal:
+        </p>
+        <a
+          href="https://www.youtube.com/@inpodcastoficial/videos"
+          target="_blank"
+          rel="noreferrer"
+          className="mt-3 inline-flex items-center gap-2 rounded-full border border-neutral-700 px-4 py-2 text-sm hover:bg-neutral-800"
+        >
           <Youtube className="h-4 w-4" /> Abrir canal no YouTube
         </a>
       </div>
       <div className="mt-4 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {items.map((_, i) => (
-          <div key={i} className="w-72 shrink-0 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/40">
+          <div
+            key={i}
+            className="w-72 shrink-0 overflow-hidden rounded-2xl border border-neutral-800 bg-neutral-900/40"
+          >
             <div className="aspect-video w-full animate-pulse bg-neutral-800" />
             <div className="space-y-2 p-4">
               <div className="h-4 w-5/6 animate-pulse rounded bg-neutral-800" />
@@ -574,18 +605,27 @@ function ArticlesCarousel({ articles }) {
   }
   return (
     <div className="relative isolate">
-      <div className="absolute left-2 top-1/2 hidden -translate-y-1/2 md:block z-30 pointer-events-none">
-        <button onClick={() => scrollBy(-480)} className="pointer-events-auto rounded-full border border-neutral-200 bg-white/80 p-2 shadow-lg hover:bg-white">
+      <div className="pointer-events-none absolute left-2 top-1/2 hidden -translate-y-1/2 md:block z-30">
+        <button
+          onClick={() => scrollBy(-480)}
+          className="pointer-events-auto rounded-full border border-neutral-200 bg-white/80 p-2 shadow-lg hover:bg-white"
+        >
           <ChevronLeft className="h-5 w-5 text-neutral-900" />
         </button>
       </div>
-      <div className="absolute right-2 top-1/2 hidden -translate-y-1/2 md:block z-30 pointer-events-none">
-        <button onClick={() => scrollBy(480)} className="pointer-events-auto rounded-full border border-neutral-200 bg-white/80 p-2 shadow-lg hover:bg-white">
+      <div className="pointer-events-none absolute right-2 top-1/2 hidden -translate-y-1/2 md:block z-30">
+        <button
+          onClick={() => scrollBy(480)}
+          className="pointer-events-auto rounded-full border border-neutral-200 bg-white/80 p-2 shadow-lg hover:bg-white"
+        >
           <ChevronRight className="h-5 w-5 text-neutral-900" />
         </button>
       </div>
 
-      <div ref={trackRef} className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div
+        ref={trackRef}
+        className="flex snap-x snap-mandatory gap-4 overflow-x-auto pb-2 pt-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
         {articles.map((a, idx) => (
           <a
             key={idx}
@@ -598,11 +638,15 @@ function ArticlesCarousel({ articles }) {
               {a.thumbnail ? (
                 <img src={a.thumbnail} alt={a.title} className="h-full w-full object-cover" />
               ) : (
-                <div className="grid h-full place-items-center text-neutral-500"><FileText className="h-7 w-7" /></div>
+                <div className="grid h-full place-items-center text-neutral-500">
+                  <FileText className="h-7 w-7" />
+                </div>
               )}
             </div>
             <div className="space-y-1 p-4 text-center">
-              <h4 className="line-clamp-2 text-sm font-semibold group-hover:underline">{a.title}</h4>
+              <h4 className="line-clamp-2 text-sm font-semibold group-hover:underline">
+                {a.title}
+              </h4>
             </div>
           </a>
         ))}
@@ -616,7 +660,10 @@ function ArticlesPlaceholder() {
   return (
     <div className="mt-1 flex gap-4 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {items.map((_, i) => (
-        <div key={i} className="w-72 shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-neutral-900">
+        <div
+          key={i}
+          className="w-72 shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-white text-neutral-900"
+        >
           <div className="aspect-[16/10] w-full animate-pulse bg-neutral-200" />
           <div className="space-y-2 p-4">
             <div className="h-4 w-5/6 animate-pulse rounded bg-neutral-200" />
