@@ -327,7 +327,7 @@ function Navbar() {
     { href: "#contato", label: "Contato" },
   ];
   return (
-    <div className="fixed inset-x-0 top-0 z-[100] bg-white text-black shadow-md">
+    <div className="fixed inset-x-0 top-0 z-[100] bg-white text-black">
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3">
         <a href="#top" className="flex items-center gap-3">
           <img
