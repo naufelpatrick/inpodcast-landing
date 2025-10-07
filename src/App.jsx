@@ -413,7 +413,7 @@ function HeaderHero() {
           transition={{ duration: 0.6 }}
           className="text-balance bg-gradient-to-br from-white to-neutral-300 bg-clip-text text-4xl font-extrabold text-transparent sm:text-5xl"
         >
-          IN pode ser o que você quiser.
+          InPodcast, o podcast das mentes interessantes.
         </motion.h1>
         <motion.p
           initial={{ opacity: 0, y: 10 }}
@@ -422,7 +422,7 @@ function HeaderHero() {
           transition={{ duration: 0.7, delay: 0.1 }}
           className="mt-3 mx-auto max-w-2xl text-lg text-neutral-300"
         >
-          Um podcast sobre inteligência de mercado, inventividade e inovação. Conceitos, ferramentas, estudos de caso e algum humor ☺️ . Apresentado por Giovanni Letti e Patrick Naufel.
+          Aqui falamos de tudo que desperta interesse — inovação, inteligência de mercado, tecnologia, cultura e curiosidades que fazem você pensar diferente.
         </motion.p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <a
