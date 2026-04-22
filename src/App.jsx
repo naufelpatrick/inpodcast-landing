@@ -279,10 +279,10 @@ export default function App() {
               <Mail className="mx-auto h-8 w-8" />
               <p className="mt-3 text-sm text-neutral-300">Nosso e-mail</p>
               <a
-                href="mailto:info@intelimerk.com"
+                href="mailto:naufelpatrick@uniplaclages.edu.br"
                 className="mt-1 inline-block text-lg font-medium text-white underline-offset-4 hover:underline"
               >
-                info@intelimerk.com
+                naufelpatrick@uniplaclages.edu.br
               </a>
             </div>
           </div>
