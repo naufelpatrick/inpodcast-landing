@@ -3,7 +3,7 @@ import "./App.css";
 
 const youtubeUrl = "https://www.youtube.com/@inpodcastoficial";
 const instagramUrl = "https://www.instagram.com/inpodcastoficial";
-const contatoUrl = "mailto:contato@inpodcast.com.br";
+const contatoUrl = "mailto:inpodcast@inpodcast.com.br";
 
 type Episode = {
   title: string;
