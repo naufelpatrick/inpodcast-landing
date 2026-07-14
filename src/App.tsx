@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import "./App.css";
 
 const youtubeUrl = "https://www.youtube.com/@inpodcastoficial";
 const instagramUrl = "https://www.instagram.com/inpodcastoficial";
-const contatoUrl = "mailto:inpodcast@inpodcast.com.br";
+const spotifyUrl = "https://open.spotify.com/show/3RbSarPxUhlBXUKSnFpYrc?si=58c4e82a946c4fd1";
 
 type Episode = {
   title: string;
@@ -15,6 +17,11 @@ type Episode = {
 function App() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [formStatus, setFormStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const reduceMotion = useReducedMotion();
+  const { scrollYProgress } = useScroll();
+  const heroParallax = useTransform(scrollYProgress, [0, 0.35], [0, reduceMotion ? 0 : 180]);
+  const bannerParallax = useTransform(scrollYProgress, [0, 0.5], [0, reduceMotion ? 0 : -42]);
 
   const latestEpisode = episodes[0];
 
@@ -36,6 +43,28 @@ function App() {
 
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setFormStatus("sending");
+
+    const form = event.currentTarget;
+    const payload = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) throw new Error("Falha no envio");
+      form.reset();
+      setFormStatus("success");
+    } catch {
+      setFormStatus("error");
+    }
+  };
 
   return (
     <main className="site">
@@ -66,7 +95,7 @@ function App() {
           </div>
         </nav>
 
-        <div className="hero-grid">
+        <motion.div className="hero-grid" style={{ y: heroParallax }}>
           <div className="hero-content">
             <p className="eyebrow">O podcast para mentes interessantes</p>
 
@@ -154,8 +183,24 @@ function App() {
               </>
             )}
           </div>
-        </div>
+        </motion.div>
       </section>
+
+      <motion.section className="listen-banner" style={{ y: bannerParallax }} aria-label="Onde ouvir o InPodcast">
+        <div>
+          <p className="listen-kicker">Dê o play</p>
+          <h2>Assista. Escute. Inspire-se.</h2>
+        </div>
+
+        <div className="listen-actions">
+          <a className="btn banner-btn" href={youtubeUrl} target="_blank" rel="noreferrer">
+            Assista no YouTube
+          </a>
+          <a className="btn banner-btn outline" href={spotifyUrl} target="_blank" rel="noreferrer">
+            Escute no Spotify
+          </a>
+        </div>
+      </motion.section>
 
       <section id="sobre" className="section split">
         <div>
@@ -245,20 +290,45 @@ function App() {
       </section>
 
       <section id="contato" className="section cta">
-        <p className="eyebrow">Participe</p>
-        <h2>Tem uma pauta, ideia ou sugestão de convidado?</h2>
-
-        <p>Entre em contato e ajude a construir as próximas conversas.</p>
-
-        <div className="buttons">
-          <a className="btn primary" href={contatoUrl}>
-            Falar com o InPodcast
-          </a>
-
-          <a className="btn secondary" href={youtubeUrl} target="_blank" rel="noreferrer">
-            Conhecer o canal
-          </a>
+        <div className="contact-intro">
+          <p className="eyebrow">Fale com o InPodcast</p>
+          <h2>Tem uma pauta, ideia ou sugestão de convidado?</h2>
+          <p>Entre em contato e ajude a construir as próximas conversas.</p>
         </div>
+
+        <form className="contact-form" onSubmit={handleSubmit}>
+          <div className="form-row">
+            <label>
+              Nome
+              <input type="text" name="name" autoComplete="name" required />
+            </label>
+            <label>
+              E-mail
+              <input type="email" name="email" autoComplete="email" required />
+            </label>
+          </div>
+
+          <label>
+            WhatsApp
+            <input type="tel" name="whatsapp" autoComplete="tel" required />
+          </label>
+
+          <label>
+            Mensagem
+            <textarea name="message" rows={6} required />
+          </label>
+
+          <input className="form-trap" type="text" name="company" tabIndex={-1} autoComplete="off" aria-hidden="true" />
+
+          <button className="btn primary" type="submit" disabled={formStatus === "sending"}>
+            {formStatus === "sending" ? "Enviando..." : "Enviar mensagem"}
+          </button>
+
+          <p className={`form-feedback ${formStatus}`} role="status" aria-live="polite">
+            {formStatus === "success" && "Mensagem enviada. Obrigado pelo contato!"}
+            {formStatus === "error" && "Não foi possível enviar agora. Tente novamente em instantes."}
+          </p>
+        </form>
       </section>
 
       <footer>

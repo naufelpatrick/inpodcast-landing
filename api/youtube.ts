@@ -1,4 +1,9 @@
-export default async function handler(req: any, res: any) {
+type ApiResponse = {
+  status: (code: number) => ApiResponse;
+  json: (body: unknown) => void;
+};
+
+export default async function handler(_req: unknown, res: ApiResponse) {
   const channelId = "UCG6eDm81-Tk9WcD4P8Dkr1Q";
 
   try {
