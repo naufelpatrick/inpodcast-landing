@@ -21,7 +21,6 @@ function App() {
   const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll();
   const heroParallax = useTransform(scrollYProgress, [0, 0.35], [0, reduceMotion ? 0 : 180]);
-  const bannerParallax = useTransform(scrollYProgress, [0, 0.5], [0, reduceMotion ? 0 : -42]);
 
   const latestEpisode = episodes[0];
 
@@ -186,7 +185,14 @@ function App() {
         </motion.div>
       </section>
 
-      <motion.section className="listen-banner" style={{ y: bannerParallax }} aria-label="Onde ouvir o InPodcast">
+      <motion.section
+        className="listen-banner"
+        initial={reduceMotion ? false : { opacity: 0, y: 28 }}
+        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.25 }}
+        transition={{ duration: 0.65, ease: "easeOut" }}
+        aria-label="Onde ouvir o InPodcast"
+      >
         <div>
           <p className="listen-kicker">Dê o play</p>
           <h2>Assista. Escute. Inspire-se.</h2>
