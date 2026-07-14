@@ -30,6 +30,14 @@ function SpotifyIcon() {
   );
 }
 
+function LinkedInIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M20.45 20.45h-3.56v-5.57c0-1.33-.03-3.04-1.85-3.04-1.85 0-2.14 1.45-2.14 2.94v5.67H9.34V8.98h3.42v1.57h.05c.48-.9 1.64-1.85 3.37-1.85 3.6 0 4.27 2.37 4.27 5.46v6.29ZM5.32 7.41a2.07 2.07 0 1 1 0-4.13 2.07 2.07 0 0 1 0 4.13Zm1.78 13.04H3.54V8.98H7.1v11.47Z" />
+    </svg>
+  );
+}
+
 function App() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [episodes, setEpisodes] = useState<Episode[]>([]);
@@ -303,9 +311,14 @@ function App() {
           <h3>Patrick Naufel</h3>
 
           <p>
-            Professor, pesquisador e especialista em design, inovação e
-            transformação digital.
+            Especialista em design de produto, UX e inovação, pesquisador em
+            sistemas produtivos e mentor de startups.
           </p>
+
+          <a className="linkedin-link" href="https://www.linkedin.com/in/naufelpatrick" target="_blank" rel="noreferrer">
+            <LinkedInIcon />
+            Ver perfil no LinkedIn
+          </a>
         </div>
 
         <div className="host">
@@ -313,9 +326,14 @@ function App() {
           <h3>Giovani Letti</h3>
 
           <p>
-            Coapresentador do InPodcast e parceiro em conversas sobre ideias,
-            cultura, mercado e tecnologia.
+            Professor e comunicador, conecta inteligência artificial, educação,
+            marketing digital, cultura e comportamento.
           </p>
+
+          <a className="linkedin-link" href="https://www.linkedin.com/in/giovani-letti-1332a1" target="_blank" rel="noreferrer">
+            <LinkedInIcon />
+            Ver perfil no LinkedIn
+          </a>
         </div>
       </section>
 

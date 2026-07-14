@@ -489,6 +489,35 @@ footer p {
   grid-template-columns: repeat(2, 1fr);
 }
 
+.host {
+  display: flex;
+  flex-direction: column;
+}
+
+.linkedin-link {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 9px;
+  margin-top: auto;
+  padding-top: 22px;
+  color: #ff8a4c;
+  font-size: 0.92rem;
+  font-weight: 800;
+  transition: color 0.2s ease, transform 0.2s ease;
+}
+
+.linkedin-link:hover {
+  color: #fff;
+  transform: translateX(3px);
+}
+
+.linkedin-link svg {
+  width: 19px;
+  height: 19px;
+  fill: currentColor;
+}
+
 .cta {
   display: grid;
   grid-template-columns: minmax(0, 0.8fr) minmax(420px, 1fr);
