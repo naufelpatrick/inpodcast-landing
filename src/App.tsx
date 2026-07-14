@@ -55,6 +55,8 @@ function App() {
   const heroContentParallax = useTransform(scrollY, [0, 900], [0, reduceMotion ? 0 : 110]);
   const heroCardParallax = useTransform(scrollY, [0, 900], [0, reduceMotion ? 0 : 230]);
   const stripParallax = useTransform(scrollY, [500, 3000], [reduceMotion ? "0%" : "8%", reduceMotion ? "0%" : "-32%"]);
+  const glowOneParallax = useTransform(scrollY, [0, 4200], [0, reduceMotion ? 0 : 1250]);
+  const glowTwoParallax = useTransform(scrollY, [0, 5200], [0, reduceMotion ? 0 : 1800]);
 
   const latestEpisode = episodes[0];
 
@@ -101,6 +103,8 @@ function App() {
 
   return (
     <main className="site">
+      <motion.div className="page-glow page-glow-one" style={{ y: glowOneParallax }} />
+      <motion.div className="page-glow page-glow-two" style={{ y: glowTwoParallax }} />
       <section className="hero">
         <div
           className="orb orb-one"
@@ -248,7 +252,14 @@ function App() {
         <motion.p style={{ x: stripParallax }}>IDEIAS • CULTURA • TECNOLOGIA • CONVERSAS •</motion.p>
       </div>
 
-      <section id="sobre" className="section split">
+      <motion.section
+        id="sobre"
+        className="section split"
+        initial={reduceMotion ? false : { opacity: 0, y: 72 }}
+        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.25 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <div>
           <p className="eyebrow">Sobre o InPodcast</p>
           <h2>Um espaço para boas perguntas antes das respostas prontas.</h2>
@@ -260,9 +271,16 @@ function App() {
           cultura, design e sociedade em conversas leves, provocativas e
           acessíveis.
         </p>
-      </section>
+      </motion.section>
 
-      <section id="episodios" className="section">
+      <motion.section
+        id="episodios"
+        className="section"
+        initial={reduceMotion ? false : { opacity: 0, y: 72 }}
+        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.12 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <div className="section-header">
           <div>
             <p className="eyebrow">Episódios</p>
@@ -277,7 +295,14 @@ function App() {
         <div className="cards">
           {episodes.length > 0 ? (
             episodes.map((episode, index) => (
-              <article className="card episode-card" key={episode.videoId}>
+              <motion.article
+                className="card episode-card"
+                key={episode.videoId}
+                initial={reduceMotion ? false : { opacity: 0, y: 56, scale: 0.96 }}
+                whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ duration: 0.6, delay: index * 0.12, ease: "easeOut" }}
+              >
                 <img src={episode.thumbnail} alt={episode.title} />
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <h3>{episode.title}</h3>
@@ -285,7 +310,7 @@ function App() {
                 <a href={episode.url} target="_blank" rel="noreferrer">
                   Assistir episódio →
                 </a>
-              </article>
+              </motion.article>
             ))
           ) : (
             <article className="card">
@@ -295,9 +320,15 @@ function App() {
             </article>
           )}
         </div>
-      </section>
+      </motion.section>
 
-      <section className="section feature">
+      <motion.section
+        className="section feature"
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
+        whileInView={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
+        viewport={{ once: true, amount: 0.3 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+      >
         <div>
           <p className="eyebrow">Cortes e melhores momentos</p>
           <h2>Ideias curtas para circular mais longe.</h2>
@@ -311,10 +342,16 @@ function App() {
         <a className="btn primary" href={instagramUrl} target="_blank" rel="noreferrer">
           Seguir no Instagram
         </a>
-      </section>
+      </motion.section>
 
       <section id="hosts" className="section hosts">
-        <div className="host">
+        <motion.div
+          className="host"
+          initial={reduceMotion ? false : { opacity: 0, x: -72, rotate: -1.5 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, x: 0, rotate: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+        >
           <div className="host-photo">
             <img src="/patrick-naufel.png" alt="Patrick Naufel" />
           </div>
@@ -330,12 +367,17 @@ function App() {
             <LinkedInIcon />
             Ver perfil no LinkedIn
           </a>
-        </div>
+        </motion.div>
 
-        <div className="host">
-          <div className="host-photo host-placeholder" aria-label="Foto de Giovani Letti em breve">
-            <span>GL</span>
-            <small>Foto em breve</small>
+        <motion.div
+          className="host"
+          initial={reduceMotion ? false : { opacity: 0, x: 72, rotate: 1.5 }}
+          whileInView={reduceMotion ? undefined : { opacity: 1, x: 0, rotate: 0 }}
+          viewport={{ once: true, amount: 0.25 }}
+          transition={{ duration: 0.8, delay: 0.12, ease: "easeOut" }}
+        >
+          <div className="host-photo">
+            <img src="/giovani-letti.png" alt="Giovani Letti" />
           </div>
           <p className="eyebrow">Apresentador</p>
           <h3>Giovani Letti</h3>
@@ -349,10 +391,17 @@ function App() {
             <LinkedInIcon />
             Ver perfil no LinkedIn
           </a>
-        </div>
+        </motion.div>
       </section>
 
-      <section id="contato" className="section cta">
+      <motion.section
+        id="contato"
+        className="section cta"
+        initial={reduceMotion ? false : { opacity: 0, y: 80 }}
+        whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.12 }}
+        transition={{ duration: 0.85, ease: "easeOut" }}
+      >
         <div className="contact-intro">
           <p className="eyebrow">Fale com o InPodcast</p>
           <h2>Tem uma pauta, ideia ou sugestão de convidado?</h2>
@@ -407,7 +456,7 @@ function App() {
             <InstagramIcon />
           </a>
         </div>
-      </section>
+      </motion.section>
 
       <footer>
         <strong>InPodcast</strong>
