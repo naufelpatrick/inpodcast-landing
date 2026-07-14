@@ -325,7 +325,7 @@ h3 {
   justify-content: space-between;
   gap: 40px;
   width: min(1180px, calc(100% - 12vw));
-  margin: 56px auto 24px;
+  margin: 56px auto 0;
   padding: 36px 42px;
   border-radius: 30px;
   background: #e26028;
@@ -354,14 +354,40 @@ h3 {
 }
 
 .banner-btn {
+  gap: 10px;
   background: #130a06;
   color: #fff8f0;
 }
 
+.banner-btn svg {
+  width: 21px;
+  height: 21px;
+  flex: 0 0 auto;
+  fill: currentColor;
+}
+
 .banner-btn.outline {
-  border: 2px solid #130a06;
+  border: 1px solid #130a06;
   background: transparent;
   color: #130a06;
+}
+
+.parallax-strip {
+  width: 100%;
+  padding: 52px 0 18px;
+  overflow: hidden;
+  color: rgba(247, 242, 234, 0.055);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.parallax-strip p {
+  width: max-content;
+  margin: 0;
+  font-size: clamp(4.8rem, 10vw, 11rem);
+  font-weight: 800;
+  line-height: 0.8;
+  letter-spacing: -0.06em;
 }
 
 .split {

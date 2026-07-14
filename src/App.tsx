@@ -14,13 +14,31 @@ type Episode = {
   thumbnail: string;
 };
 
+function YouTubeIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8ZM9.6 15.6V8.4L15.8 12l-6.2 3.6Z" />
+    </svg>
+  );
+}
+
+function SpotifyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M12 0a12 12 0 1 0 0 24 12 12 0 0 0 0-24Zm5.5 17.3a.75.75 0 0 1-1 .25c-2.8-1.7-6.3-2.1-10.4-1.15a.75.75 0 1 1-.34-1.46c4.5-1.03 8.4-.57 11.5 1.32.35.22.46.68.24 1.04Zm1.45-3.22a.94.94 0 0 1-1.29.31c-3.2-1.97-8.1-2.54-11.9-1.39a.94.94 0 1 1-.55-1.8c4.35-1.32 9.8-.68 13.43 1.54.44.27.58.85.31 1.29Zm.12-3.35C15.23 8.45 8.9 8.24 5.24 9.35a1.13 1.13 0 1 1-.66-2.16c4.2-1.28 11.2-1.03 15.65 1.61a1.13 1.13 0 0 1-1.16 1.93Z" />
+    </svg>
+  );
+}
+
 function App() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [episodes, setEpisodes] = useState<Episode[]>([]);
   const [formStatus, setFormStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const reduceMotion = useReducedMotion();
-  const { scrollYProgress } = useScroll();
-  const heroParallax = useTransform(scrollYProgress, [0, 0.35], [0, reduceMotion ? 0 : 180]);
+  const { scrollY } = useScroll();
+  const heroContentParallax = useTransform(scrollY, [0, 900], [0, reduceMotion ? 0 : 110]);
+  const heroCardParallax = useTransform(scrollY, [0, 900], [0, reduceMotion ? 0 : 230]);
+  const stripParallax = useTransform(scrollY, [500, 3000], [reduceMotion ? "0%" : "8%", reduceMotion ? "0%" : "-32%"]);
 
   const latestEpisode = episodes[0];
 
@@ -94,8 +112,8 @@ function App() {
           </div>
         </nav>
 
-        <motion.div className="hero-grid" style={{ y: heroParallax }}>
-          <div className="hero-content">
+        <div className="hero-grid">
+          <motion.div className="hero-content" style={{ y: heroContentParallax }}>
             <p className="eyebrow">O podcast para mentes interessantes</p>
 
             <h1>
@@ -134,9 +152,9 @@ function App() {
                 <span>Curiosidade aplicada</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="hero-card real-episode-card">
+          <motion.div className="hero-card real-episode-card" style={{ y: heroCardParallax }}>
             <div className="player-top">
               <span className="live-dot" />
               <p>Último episódio</p>
@@ -181,8 +199,8 @@ function App() {
                 </a>
               </>
             )}
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </section>
 
       <motion.section
@@ -200,13 +218,19 @@ function App() {
 
         <div className="listen-actions">
           <a className="btn banner-btn" href={youtubeUrl} target="_blank" rel="noreferrer">
+            <YouTubeIcon />
             Assista no YouTube
           </a>
           <a className="btn banner-btn outline" href={spotifyUrl} target="_blank" rel="noreferrer">
+            <SpotifyIcon />
             Escute no Spotify
           </a>
         </div>
       </motion.section>
+
+      <div className="parallax-strip" aria-hidden="true">
+        <motion.p style={{ x: stripParallax }}>IDEIAS • CULTURA • TECNOLOGIA • CONVERSAS •</motion.p>
+      </div>
 
       <section id="sobre" className="section split">
         <div>
