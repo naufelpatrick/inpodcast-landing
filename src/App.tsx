@@ -6,12 +6,14 @@ import "./App.css";
 const youtubeUrl = "https://www.youtube.com/@inpodcastoficial";
 const instagramUrl = "https://www.instagram.com/inpodcastoficial";
 const spotifyUrl = "https://open.spotify.com/show/3RbSarPxUhlBXUKSnFpYrc?si=58c4e82a946c4fd1";
+const spotifyShowId = "3RbSarPxUhlBXUKSnFpYrc";
 
 type Episode = {
+  id: string;
   title: string;
-  videoId: string;
   url: string;
   thumbnail: string;
+  releaseDate: string;
 };
 
 function YouTubeIcon() {
@@ -49,6 +51,7 @@ function InstagramIcon() {
 function App() {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [episodesLoading, setEpisodesLoading] = useState(true);
   const [formStatus, setFormStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const reduceMotion = useReducedMotion();
   const { scrollY } = useScroll();
@@ -69,12 +72,13 @@ function App() {
 
     window.addEventListener("mousemove", handleMouseMove);
 
-    fetch("/api/youtube")
+    fetch("/api/spotify")
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) setEpisodes(data);
+        if (Array.isArray(data?.episodes)) setEpisodes(data.episodes);
       })
-      .catch(() => setEpisodes([]));
+      .catch(() => setEpisodes([]))
+      .finally(() => setEpisodesLoading(false));
 
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
@@ -182,41 +186,34 @@ function App() {
 
             {latestEpisode ? (
               <>
-                <a href={latestEpisode.url} target="_blank" rel="noreferrer" className="hero-thumb-link">
-                  <img
-                    src={latestEpisode.thumbnail}
-                    alt={latestEpisode.title}
-                    className="hero-thumbnail"
-                  />
-                </a>
+                <iframe
+                  className="spotify-player"
+                  src={`https://open.spotify.com/embed/episode/${latestEpisode.id}?utm_source=generator&theme=0`}
+                  title={`Spotify: ${latestEpisode.title}`}
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                />
 
                 <h3>{latestEpisode.title}</h3>
 
                 <p>
-                  O episódio mais recente do canal, atualizado automaticamente
-                  pelo YouTube.
+                  O episódio mais recente do InPodcast, atualizado
+                  automaticamente pelo Spotify.
                 </p>
 
                 <a href={latestEpisode.url} target="_blank" rel="noreferrer">
-                  Assistir agora →
+                  Escutar no Spotify →
                 </a>
               </>
             ) : (
               <>
-                <div className="episode-loading">
-                  <span>IN</span>
-                  <strong>Podcast</strong>
-                </div>
-
-                <h3>Carregando último episódio...</h3>
-
-                <p>
-                  O episódio mais recente aparecerá aqui automaticamente.
-                </p>
-
-                <a href={youtubeUrl} target="_blank" rel="noreferrer">
-                  Ir para o canal →
-                </a>
+                <iframe
+                  className="spotify-player spotify-show-player"
+                  src={`https://open.spotify.com/embed/show/${spotifyShowId}?utm_source=generator&theme=0`}
+                  title="InPodcast no Spotify"
+                  allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                  loading="lazy"
+                />
               </>
             )}
           </motion.div>
@@ -287,8 +284,8 @@ function App() {
             <h2>Últimos episódios</h2>
           </div>
 
-          <a href={youtubeUrl} target="_blank" rel="noreferrer">
-            Ver canal completo →
+          <a href={spotifyUrl} target="_blank" rel="noreferrer">
+            Ver no Spotify →
           </a>
         </div>
 
@@ -297,7 +294,7 @@ function App() {
             episodes.map((episode, index) => (
               <motion.article
                 className="card episode-card"
-                key={episode.videoId}
+                key={episode.id}
                 initial={reduceMotion ? false : { opacity: 0, y: 56, scale: 0.96 }}
                 whileInView={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true, amount: 0.2 }}
@@ -306,17 +303,27 @@ function App() {
                 <img src={episode.thumbnail} alt={episode.title} />
                 <span>{String(index + 1).padStart(2, "0")}</span>
                 <h3>{episode.title}</h3>
+                <p>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(`${episode.releaseDate}T12:00:00`))}</p>
 
                 <a href={episode.url} target="_blank" rel="noreferrer">
-                  Assistir episódio →
+                  Escutar episódio →
                 </a>
               </motion.article>
             ))
           ) : (
             <article className="card">
               <span>01</span>
-              <h3>Carregando episódios...</h3>
-              <p>Os vídeos do canal aparecerão aqui automaticamente.</p>
+              <h3>{episodesLoading ? "Carregando episódios..." : "Ouça o InPodcast no Spotify"}</h3>
+              <p>
+                {episodesLoading
+                  ? "Os episódios do Spotify aparecerão aqui automaticamente."
+                  : "Acesse o programa completo e confira todos os episódios."}
+              </p>
+              {!episodesLoading && (
+                <a href={spotifyUrl} target="_blank" rel="noreferrer">
+                  Abrir no Spotify →
+                </a>
+              )}
             </article>
           )}
         </div>
