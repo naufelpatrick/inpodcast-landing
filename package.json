@@ -4,13 +4,18 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev": "tsx scripts/serve.ts --dev",
+    "build": "tsc -b && tsx scripts/build.ts",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "tsx scripts/serve.ts",
+    "catalog:sync": "tsx scripts/catalog.ts --sync",
+    "test": "tsx --test tests/*.test.ts",
+    "test:e2e": "playwright test",
+    "images:optimize": "tsx scripts/images.ts"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.11",
+    "fast-xml-parser": "^5.11.1",
     "framer-motion": "^12.23.12",
     "lucide-react": "^0.539.0",
     "react": "^19.1.1",
@@ -18,7 +23,9 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.33.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4.1.11",
+    "@types/node": "^22.20.2",
     "@types/react": "^19.1.10",
     "@types/react-dom": "^19.1.7",
     "@vitejs/plugin-react": "^5.0.0",
@@ -28,9 +35,14 @@
     "eslint-plugin-react-refresh": "^0.4.20",
     "globals": "^16.3.0",
     "postcss": "^8.5.6",
+    "sharp": "^0.35.4",
     "tailwindcss": "^3.4.17",
+    "tsx": "^4.23.13",
     "typescript": "~5.8.3",
     "typescript-eslint": "^8.39.1",
     "vite": "^7.1.2"
+  },
+  "engines": {
+    "node": ">=22.13.0"
   }
 }

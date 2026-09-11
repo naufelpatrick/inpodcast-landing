@@ -1,20 +1,15 @@
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import "./App.css";
+import { motion, useScroll, useTransform } from "framer-motion";
+import Reveal from './Reveal';
+import { useReducedMotion } from './useReducedMotion';
+import { episodePath, formatDate } from './episodes';
+import type { Episode } from './episodes';
 
 const youtubeUrl = "https://www.youtube.com/@inpodcastoficial";
 const instagramUrl = "https://www.instagram.com/inpodcastoficial";
 const spotifyUrl = "https://open.spotify.com/show/3RbSarPxUhlBXUKSnFpYrc?si=58c4e82a946c4fd1";
 const spotifyShowId = "3RbSarPxUhlBXUKSnFpYrc";
-
-type Episode = {
-  id: string;
-  title: string;
-  url: string;
-  thumbnail: string;
-  releaseDate: string;
-};
 
 function YouTubeIcon() {
   return (
@@ -48,10 +43,9 @@ function InstagramIcon() {
   );
 }
 
-function App() {
+function App({ initialEpisodes }: { initialEpisodes: Episode[] }) {
   const [offset, setOffset] = useState({ x: 0, y: 0 });
-  const [episodes, setEpisodes] = useState<Episode[]>([]);
-  const [episodesLoading, setEpisodesLoading] = useState(true);
+  const [episodes, setEpisodes] = useState<Episode[]>(initialEpisodes);
   const [formStatus, setFormStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const reduceMotion = useReducedMotion();
   const { scrollY } = useScroll();
@@ -65,23 +59,31 @@ function App() {
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
+      if (reduceMotion) return;
       const x = (event.clientX / window.innerWidth - 0.5) * 26;
       const y = (event.clientY / window.innerHeight - 0.5) * 26;
       setOffset({ x, y });
     };
 
     window.addEventListener("mousemove", handleMouseMove);
-
-    fetch("/api/spotify")
-      .then((res) => res.json())
-      .then((data) => {
-        if (Array.isArray(data?.episodes)) setEpisodes(data.episodes);
-      })
-      .catch(() => setEpisodes([]))
-      .finally(() => setEpisodesLoading(false));
-
     return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
+  }, [reduceMotion]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/api/spotify", { signal: controller.signal })
+      .then((res) => res.ok ? res.json() : Promise.reject(new Error('Spotify indisponível')))
+      .then((data) => {
+        if (Array.isArray(data?.episodes) && data.episodes.length > 0) {
+          // Only link to internal pages that exist in this deployment.
+          const known = new Map(initialEpisodes.map(episode => [episode.id, episode.slug]));
+          setEpisodes(data.episodes.slice(0, 3).map((episode: Episode) => ({ ...episode, slug: known.get(episode.id) || '' })));
+        }
+      })
+      .catch(() => { /* Keep the prerendered catalog on a temporary failure. */ });
+
+    return () => controller.abort();
+  }, [initialEpisodes]);
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -120,16 +122,16 @@ function App() {
         />
 
         <nav className="nav">
-          <a className="brand logo-brand" href="#">
+          <a className="brand logo-brand" href="/" aria-label="InPodcast — início">
             <img
               src="/in-logo-horizontal-branco.png"
               alt="InPodcast"
-              className="logo"
+              className="logo" width={1463} height={511}
             />
           </a>
 
           <div className="nav-links">
-            <a href="#episodios">Episódios</a>
+            <a href="/episodios">Episódios</a>
             <a href="#sobre">Sobre</a>
             <a href="#hosts">Apresentadores</a>
             <a href="#contato">Contato</a>
@@ -141,13 +143,12 @@ function App() {
             <p className="eyebrow">O podcast para mentes interessantes</p>
 
             <h1>
-              Ideias, cultura e tecnologia para quem pensa diferente.
+              InPodcast: conversas que não cabem em 50 minutos de aula
             </h1>
 
             <p className="hero-text">
-              Conversas francas sobre inovação, mercado, comportamento, design,
-              tecnologia e curiosidades que ajudam a enxergar o mundo por outros
-              ângulos.
+              Com Giovani Letti e Patrick Naufel, um podcast semanal sobre inovação,
+              tecnologia, design, cultura, comportamento e sociedade.
             </p>
 
             <div className="buttons">
@@ -201,7 +202,7 @@ function App() {
                   automaticamente pelo Spotify.
                 </p>
 
-                <a href={latestEpisode.url} target="_blank" rel="noreferrer">
+                <a href={latestEpisode.spotifyUrl} target="_blank" rel="noreferrer">
                   Escutar no Spotify →
                 </a>
               </>
@@ -220,7 +221,7 @@ function App() {
         </div>
       </section>
 
-      <motion.section
+      <Reveal as="section" disabled={reduceMotion}
         className="listen-banner"
         initial={reduceMotion ? false : { opacity: 0, y: 28 }}
         whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
@@ -243,15 +244,15 @@ function App() {
             Escute no Spotify
           </a>
         </div>
-      </motion.section>
+      </Reveal>
 
       <div className="parallax-strip" aria-hidden="true">
         <motion.p style={{ x: stripParallax }}>IDEIAS • CULTURA • TECNOLOGIA • CONVERSAS •</motion.p>
       </div>
 
-      <motion.section
+      <Reveal as="section" disabled={reduceMotion}
         id="sobre"
-        className="section split"
+        className="section split about-section"
         initial={reduceMotion ? false : { opacity: 0, y: 72 }}
         whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
         viewport={{ once: true, amount: 0.25 }}
@@ -262,15 +263,15 @@ function App() {
           <h2>Um espaço para boas perguntas antes das respostas prontas.</h2>
         </div>
 
-        <p>
-          O InPodcast é conduzido por Patrick Naufel e Giovani Letti. O programa
-          conecta temas como inovação, inteligência de mercado, tecnologia,
-          cultura, design e sociedade em conversas leves, provocativas e
-          acessíveis.
-        </p>
-      </motion.section>
+        <div className="about-copy">
+          <p>O InPodcast nasceu de uma inquietação de sala de aula: 50 minutos quase nunca eram suficientes para as conversas que realmente valiam a pena continuar.</p>
+          <p>Giovani Letti e Patrick Naufel, professores universitários, decidiram levar para fora da sala aquilo que ficava depois do sinal — perguntas, provocações, referências e conexões entre inovação, tecnologia, design, cultura, comportamento e sociedade.</p>
+          <p>Assim nasceu um espaço semanal para conversas sem pressa, com convidados, ideias e temas que ajudam a enxergar o mundo por outros ângulos.</p>
+          <p>InPodcast, com Giovani Letti e Patrick Naufel: ideias que não cabem em 50 minutos de aula.</p>
+        </div>
+      </Reveal>
 
-      <motion.section
+      <Reveal as="section" disabled={reduceMotion}
         id="episodios"
         className="section"
         initial={reduceMotion ? false : { opacity: 0, y: 72 }}
@@ -284,15 +285,13 @@ function App() {
             <h2>Últimos episódios</h2>
           </div>
 
-          <a href={spotifyUrl} target="_blank" rel="noreferrer">
-            Ver no Spotify →
-          </a>
+          <a href="/episodios">Ver todos os episódios →</a>
         </div>
 
         <div className="cards">
           {episodes.length > 0 ? (
-            episodes.map((episode, index) => (
-              <motion.article
+            episodes.slice(0, 3).map((episode, index) => (
+              <Reveal as="article" disabled={reduceMotion}
                 className="card episode-card"
                 key={episode.id}
                 initial={reduceMotion ? false : { opacity: 0, y: 56, scale: 0.96 }}
@@ -300,36 +299,29 @@ function App() {
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ duration: 0.6, delay: index * 0.12, ease: "easeOut" }}
               >
-                <img src={episode.thumbnail} alt={episode.title} />
+                <img src={episode.thumbnail} alt={episode.title} width={640} height={640} loading="lazy" decoding="async" />
                 <span>{String(index + 1).padStart(2, "0")}</span>
-                <h3>{episode.title}</h3>
-                <p>{new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(`${episode.releaseDate}T12:00:00`))}</p>
+                <h3><a href={episode.slug ? episodePath(episode) : episode.spotifyUrl}>{episode.title}</a></h3>
+                <p>{formatDate(episode.releaseDate)}</p>
 
-                <a href={episode.url} target="_blank" rel="noreferrer">
+                {episode.slug && <a href={episodePath(episode)}>Sobre o episódio →</a>}
+                <a href={episode.spotifyUrl} target="_blank" rel="noreferrer">
                   Escutar episódio →
                 </a>
-              </motion.article>
+              </Reveal>
             ))
           ) : (
             <article className="card">
               <span>01</span>
-              <h3>{episodesLoading ? "Carregando episódios..." : "Ouça o InPodcast no Spotify"}</h3>
-              <p>
-                {episodesLoading
-                  ? "Os episódios do Spotify aparecerão aqui automaticamente."
-                  : "Acesse o programa completo e confira todos os episódios."}
-              </p>
-              {!episodesLoading && (
-                <a href={spotifyUrl} target="_blank" rel="noreferrer">
-                  Abrir no Spotify →
-                </a>
-              )}
+              <h3>Ouça o InPodcast no Spotify</h3>
+              <p>Acesse o programa completo e confira todos os episódios.</p>
+              <a href={spotifyUrl} target="_blank" rel="noreferrer">Abrir no Spotify →</a>
             </article>
           )}
         </div>
-      </motion.section>
+      </Reveal>
 
-      <motion.section
+      <Reveal as="section" disabled={reduceMotion}
         className="section feature"
         initial={reduceMotion ? false : { opacity: 0, scale: 0.96 }}
         whileInView={reduceMotion ? undefined : { opacity: 1, scale: 1 }}
@@ -349,18 +341,18 @@ function App() {
         <a className="btn primary" href={instagramUrl} target="_blank" rel="noreferrer">
           Seguir no Instagram
         </a>
-      </motion.section>
+      </Reveal>
 
       <section id="hosts" className="section hosts">
-        <motion.div
-          className="host"
+        <Reveal
+          disabled={reduceMotion} className="host"
           initial={reduceMotion ? false : { opacity: 0, x: -72, rotate: -1.5 }}
           whileInView={reduceMotion ? undefined : { opacity: 1, x: 0, rotate: 0 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
         >
           <div className="host-photo">
-            <img src="/patrick-naufel.png" alt="Patrick Naufel" />
+            <img src="/patrick-naufel.webp" alt="Patrick Naufel" width={800} height={942} loading="lazy" decoding="async" />
           </div>
           <p className="eyebrow">Apresentador</p>
           <h3>Patrick Naufel</h3>
@@ -374,17 +366,17 @@ function App() {
             <LinkedInIcon />
             Ver perfil no LinkedIn
           </a>
-        </motion.div>
+        </Reveal>
 
-        <motion.div
-          className="host"
+        <Reveal
+          disabled={reduceMotion} className="host"
           initial={reduceMotion ? false : { opacity: 0, x: 72, rotate: 1.5 }}
           whileInView={reduceMotion ? undefined : { opacity: 1, x: 0, rotate: 0 }}
           viewport={{ once: true, amount: 0.25 }}
           transition={{ duration: 0.8, delay: 0.12, ease: "easeOut" }}
         >
           <div className="host-photo">
-            <img src="/giovani-letti.png" alt="Giovani Letti" />
+            <img src="/giovani-letti.webp" alt="Giovani Letti" width={800} height={975} loading="lazy" decoding="async" />
           </div>
           <p className="eyebrow">Apresentador</p>
           <h3>Giovani Letti</h3>
@@ -398,10 +390,10 @@ function App() {
             <LinkedInIcon />
             Ver perfil no LinkedIn
           </a>
-        </motion.div>
+        </Reveal>
       </section>
 
-      <motion.section
+      <Reveal as="section" disabled={reduceMotion}
         id="contato"
         className="section cta"
         initial={reduceMotion ? false : { opacity: 0, y: 80 }}
@@ -415,6 +407,7 @@ function App() {
           <p>Entre em contato e ajude a construir as próximas conversas.</p>
         </div>
 
+        <noscript><p>Para falar conosco sem JavaScript, escreva para <a href="mailto:inpodcast@inpodcast.com.br">inpodcast@inpodcast.com.br</a>.</p></noscript>
         <form className="contact-form" onSubmit={handleSubmit}>
           <div className="form-row">
             <label>
@@ -463,7 +456,7 @@ function App() {
             <InstagramIcon />
           </a>
         </div>
-      </motion.section>
+      </Reveal>
 
       <footer>
         <strong>InPodcast</strong>

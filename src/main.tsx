@@ -1,10 +1,8 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import App from './App'
-import './index.css'
-
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-)
+import React from 'react';
+import { hydrateRoot } from 'react-dom/client';
+import Page from './Page';
+import type { PageData } from './episodes';
+import './index.css';
+import './App.css';
+const data = JSON.parse(document.getElementById('page-data')!.textContent!) as PageData;
+hydrateRoot(document.getElementById('root')!, <React.StrictMode><Page {...data} /></React.StrictMode>);

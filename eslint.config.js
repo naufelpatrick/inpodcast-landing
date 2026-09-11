@@ -6,7 +6,7 @@ import tseslint from 'typescript-eslint'
 import { globalIgnores } from 'eslint/config'
 
 export default tseslint.config([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'dist-ssr', 'playwright-report', 'test-results']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [
@@ -20,4 +20,5 @@ export default tseslint.config([
       globals: globals.browser,
     },
   },
+  { files: ['api/**/*.{ts,js}', 'server/**/*.ts', 'scripts/**/*.ts', 'tests/**/*.ts', '*.config.*'], languageOptions: { globals: globals.node } },
 ])
